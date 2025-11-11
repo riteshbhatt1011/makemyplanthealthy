@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Health Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-leaf"></i>
+                <h1>Plant Health Detector</h1>
+            </div>
+            <p class="subtitle">AI-powered plant disease detection and cure recommendations</p>
+        </header>
+
+        <main class="main-content">
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-content">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h3>Upload Plant Image</h3>
+                        <p>Drag and drop your image here or click to browse</p>
+                        <input type="file" id="imageInput" accept="image/*" hidden>
+                        <button class="upload-btn" onclick="document.getElementById('imageInput').click()">
+                            Choose Image
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="image-preview" id="imagePreview" style="display: none;">
+                    <img id="previewImg" alt="Plant Image Preview">
+                    <button class="analyze-btn" id="analyzeBtn">
+                        <i class="fas fa-search"></i>
+                        Analyze Plant Health
+                    </button>
+                </div>
+            </div>
+
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <div class="result-card">
+                    <div class="result-header">
+                        <h2>Analysis Results</h2>
+                        <div class="confidence-score">
+                            <span class="score-label">Confidence:</span>
+                            <span class="score-value" id="confidenceScore">0%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-content">
+                        <div class="disease-info">
+                            <h3>Disease Detected</h3>
+                            <p class="disease-name" id="diseaseName">No disease detected</p>
+                            <div class="disease-description" id="diseaseDescription">
+                                Your plant appears to be healthy!
+                            </div>
+                        </div>
+                        
+                        <div class="cure-info">
+                            <h3>Treatment & Prevention</h3>
+                            <div class="cure-steps" id="cureSteps">
+                                <p>No treatment needed for healthy plants.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="loading-section" id="loadingSection" style="display: none;">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <p>Analyzing your plant image...</p>
+                <p class="loading-subtitle">This may take a few moments</p>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 Plant Health Detector. Powered by AI & Machine Learning.</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
