@@ -314,12 +314,32 @@ import base64
 import os
 from model_config import *
 from dotenv import load_dotenv
+import gdown
 
-# Load environment variables
+# Load environment variables first
 load_dotenv()
 
+# Google Drive model download
+MODEL_FILE = "Make_healthy_plant.keras"
+MODEL_URL = os.getenv("MODEL_URL")
+
+if not os.path.exists(MODEL_FILE):
+    if MODEL_URL:
+        print("🔄 Downloading model from Google Drive...")
+        try:
+            gdown.download(MODEL_URL, MODEL_FILE, quiet=False)
+            print(f"✅ Model downloaded successfully as {MODEL_FILE}")
+        except Exception as e:
+            print(f"❌ Failed to download model: {e}")
+    else:
+        print("⚠️ MODEL_URL not set in .env. Please set it to your Google Drive file link.")
+else:
+    print(f"✅ Model already exists: {MODEL_FILE}")
+
+# Flask app setup
 app = Flask(__name__)
 CORS(app)
+app.secret_key = os.getenv("SECRET_KEY", "dev-secret-change-me")
 
 # Global variable to store the loaded model
 model = None
@@ -333,16 +353,16 @@ def load_model():
             try:
                 model = tf.keras.models.load_model(MODEL_PATH, compile=False)
             except Exception as e:
-                print(f"⚠️  Model loading failed: {e}")
+                print(f"⚠️ Model loading failed: {e}")
                 # Fallback: rebuild input layer
                 layers = tf.keras.models.load_model(MODEL_PATH, compile=False).layers[1:]
-                inputs = tf.keras.layers.Input(shape=(161, 161, 3))
+                inputs = tf.keras.layers.Input(shape=(INPUT_SIZE[0], INPUT_SIZE[1], CHANNELS))
                 x = inputs
                 for layer in layers:
                     x = layer(x)
                 model = tf.keras.Model(inputs=inputs, outputs=x)
                 print("✅ Model rebuilt with correct input shape")
-            
+
             model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
             print(f"✅ Model loaded successfully from {MODEL_PATH}")
         else:
@@ -396,18 +416,18 @@ def analyze_plant():
             return jsonify({'error': 'No image data provided'}), 400
         if model is None:
             return jsonify({'error': 'Model not loaded'}), 500
-        
+
         processed_image = preprocess_image(image_data)
         if processed_image is None:
             return jsonify({'error': 'Failed to process image'}), 400
-        
+
         predicted_class, confidence = predict_disease(processed_image)
         if predicted_class is None:
             return jsonify({'error': 'Prediction failed'}), 500
-        
+
         disease_info = DISEASE_INFO.get(predicted_class, {})
         display_name = predicted_class.replace('___', ' - ').replace('_', ' ')
-        
+
         result = {
             'disease': display_name,
             'confidence': round(confidence * 100, 2),
@@ -441,11 +461,17 @@ def model_info():
 
 # Load model on startup
 print("🚀 Starting Plant Health Detector...")
-if os.path.exists(MODEL_PATH):
-    load_model()
+if load_model():
+    print("✅ Ready to analyze plant images!")
 else:
-    print(f"⚠️  Model file not found at {MODEL_PATH}. Running in demo mode.")
+    print("⚠️ Running in demo mode (no ML model)")
 
-# Flask settings
-app.secret_key = os.getenv("SECRET_KEY", "dev-secret-change-me")
-
+# Flask app run (use environment variables for production)
+if __name__ == '__main__':
+    host = os.getenv("HOST", "0.0.0.0")
+    try:
+        port = int(os.getenv("PORT", "5000"))
+    except ValueError:
+        port = 5000
+    debug_flag = os.getenv("FLASK_DEBUG", "true").lower() in ("1", "true", "yes")
+    app.run(debug=debug_flag, host=host, port=port)
